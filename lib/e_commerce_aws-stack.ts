@@ -1,7 +1,7 @@
+import * as cdk from 'aws-cdk-lib';
 import * as lambdaNodeJs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as cwlogs from 'aws-cdk-lib/aws-logs';
-import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 interface ECommerceAPIStackProps extends cdk.StackProps {
@@ -14,10 +14,10 @@ export class ECommerceAPIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ECommerceAPIStackProps) {
     super(scope, id, props);
 
-    const logGroup = new cwlogs.LogGroup(this, "ECommerceApiLogGroup");
+    const logGroup = new cwlogs.LogGroup(this, "ECommerceApiLogs");
 
-    const api = new apigateway.RestApi(this, "ECommerceAPI", {
-      restApiName: "ECommerceAPI",
+    const api = new apigateway.RestApi(this, "ECommerceApi", {
+      restApiName: "ECommerceApi",
       cloudWatchRole: true,
       deployOptions: {
         accessLogDestination: new apigateway.LogGroupLogDestination(logGroup),
