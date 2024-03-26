@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { ProductsAppStack } from '../lib/productsApp-stack';
 import { ECommerceAPIStack } from '../lib/e_commerce_aws-stack';
 import { ProductsAppLayersStack } from '../lib/productsAppLayers-stack';
+import { EventsDdbStack } from 'lib/eventsDdb-stack';
 
 const app = new cdk.App();
 
@@ -15,16 +16,27 @@ const tags = {
   team: "SiecolaCode"
 };
 
+
 const productsAppLayersStack = new ProductsAppLayersStack(app, "ProductsAppLayers", {
   tags: tags,
   env: env
 });
 
+
+const eventDdBStack = new EventsDdbStack(app, "EventsDdb", {
+  tags: tags,
+  env: env,
+});
+
+
 const productsAppStack = new ProductsAppStack(app, "ProductsApp", {
+  eventsDdb:  eventDdBStack.table,
   tags: tags,
   env: env
 });
 productsAppStack.addDependency(productsAppLayersStack);
+productsAppStack.addDependency(eventDdBStack);
+
 
 const eCommerceApiStack = new ECommerceAPIStack(app, "ECommerceApi", {
   productsFetchHandler: productsAppStack.productsFetchHandler,
@@ -33,3 +45,4 @@ const eCommerceApiStack = new ECommerceAPIStack(app, "ECommerceApi", {
   env: env
 });
 eCommerceApiStack.addDependency(productsAppStack);
+
