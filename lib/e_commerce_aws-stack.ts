@@ -6,7 +6,8 @@ import { Construct } from 'constructs';
 
 interface ECommerceAPIStackProps extends cdk.StackProps {
   productsFetchHandler: lambdaNodeJs.NodejsFunction;
-  productsAdminHandler: lambdaNodeJs.NodejsFunction,
+  productsAdminHandler: lambdaNodeJs.NodejsFunction;
+  ordersHandler: lambdaNodeJs.NodejsFunction;
 }
 
 export class ECommerceAPIStack extends cdk.Stack {
@@ -15,7 +16,6 @@ export class ECommerceAPIStack extends cdk.Stack {
     super(scope, id, props);
 
     const logGroup = new cwlogs.LogGroup(this, "ECommerceApiLogs");
-
     const api = new apigateway.RestApi(this, "ECommerceApi", {
       restApiName: "ECommerceApi",
       cloudWatchRole: true,
@@ -35,6 +35,39 @@ export class ECommerceAPIStack extends cdk.Stack {
       }
     });
 
+    this.createProductsService(props, api);
+    this.createOrdersService(props, api);
+  }
+
+  private createOrdersService(props: ECommerceAPIStackProps, api: apigateway.RestApi) {
+    const ordersIntegration = new apigateway.LambdaIntegration(props.ordersHandler);
+
+    // resource - /orders
+    const  ordersResource = api.root.addResource("orders");
+
+    // GET Method
+    ordersResource.addMethod("GET", ordersIntegration);
+
+    // DELETE Validation
+    const ordersDeletionValidator = new apigateway.RequestValidator(this, "OrderDeletionValidator", {
+       restApi: api,
+       requestValidatorName: "OrderDeletionValidator",
+       validateRequestBody: true,
+    });
+
+    ordersResource.addMethod("DELETE", ordersIntegration, {
+      requestParameters: {
+        'method.request.querystring.email': true,
+        'method.request.querystring.orderId': true
+      },
+      requestValidator: ordersDeletionValidator
+    });
+
+    // POST Method
+    ordersResource.addMethod("POST", ordersIntegration);
+  }
+
+  private createProductsService(props: ECommerceAPIStackProps, api: apigateway.RestApi) {
     const productsFetchIntegration = new apigateway.LambdaIntegration(props.productsFetchHandler);
 
     const productsResource = api.root.addResource("products");
@@ -44,11 +77,8 @@ export class ECommerceAPIStack extends cdk.Stack {
     productIdResource.addMethod("GET", productsFetchIntegration);
 
     const productsAdminIntegration = new apigateway.LambdaIntegration(props.productsAdminHandler);
-
     productIdResource.addMethod("POST", productsAdminIntegration);
-
     productIdResource.addMethod("PUT", productsAdminIntegration);
-
     productIdResource.addMethod("DELETE", productsAdminIntegration);
   }
 }
