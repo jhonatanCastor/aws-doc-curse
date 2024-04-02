@@ -1,6 +1,5 @@
-import {DocumentClient} from "aws-sdk/clients/dynamodb";
-import {v4 as uuid} from "uuid"
-
+import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { v4 as uuid } from "uuid"
 
 export interface OrdersProduct {
   code: string;
@@ -49,14 +48,45 @@ export class OrdersRepository {
   }
 
   async getOrdersByEmail(email: string): Promise<Orders[]> {
-    const data  = await this.ddbClient.query({
+    const data = await this.ddbClient.query({
       TableName: this.ordersDdb,
       KeyConditionExpression: "pk = :email",
       ExpressionAttributeValues: {
         ":email": email
       }
     }).promise();
-    return data.Items as Orders[]; 
+    return data.Items as Orders[];
   }
-  
+
+  async getOrder(email: string, orderId: string): Promise<Orders> {
+    const data = await this.ddbClient.get({
+      TableName: this.ordersDdb,
+      Key: {
+        pk: email,
+        sk: orderId
+      }
+    }).promise();
+    if (data.Item) {
+      return data.Item as Orders;
+    } else {
+      throw new Error('Order not found')
+    }
+  }
+
+  async deleteOrder(email: string, orderId: string): Promise<Orders> {
+    const data = await this.ddbClient.delete({
+      TableName: this.ordersDdb,
+      Key: {
+        pk: email,
+        sk: orderId
+      },
+      ReturnValues: "ALL_OLD"
+    }).promise()
+    if (data.Attributes) {
+      return data.Attributes as Orders
+    } else {
+      throw new Error('Order not found')
+    }
+  }
 }
+
