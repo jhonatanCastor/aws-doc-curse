@@ -52,7 +52,7 @@ export class ECommerceAPIStack extends cdk.Stack {
     const ordersDeletionValidator = new apigateway.RequestValidator(this, "OrderDeletionValidator", {
        restApi: api,
        requestValidatorName: "OrderDeletionValidator",
-       validateRequestBody: true,
+       validateRequestParameters: true,
     });
 
     ordersResource.addMethod("DELETE", ordersIntegration, {

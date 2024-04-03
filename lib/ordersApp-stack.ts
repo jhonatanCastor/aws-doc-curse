@@ -4,7 +4,6 @@ import * as cdk from "aws-cdk-lib";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
-import { threadId } from "worker_threads";
 
 interface OrdersAppStackProps extends cdk.StackProps {
   productsDbd: dynamodb.Table;
@@ -35,6 +34,10 @@ export class OrdersAppStack extends cdk.Stack {
     const ordersLayerArn = ssm.StringParameter.valueForStringParameter(this, "OrdersLayerVersionArn");
     const ordersLayer = lambda.LayerVersion.fromLayerVersionArn(this, "OrdersLayerVersionArn", ordersLayerArn);
 
+    // Orders API Layer
+    const ordersApiLayerArn = ssm.StringParameter.valueForStringParameter(this, "OrdersApiLayerVersionArn");
+    const ordersApiLayer = lambda.LayerVersion.fromLayerVersionArn(this, "OrdersApiLayerVersionArn", ordersApiLayerArn);
+
 
     // Products Layer
     const productsLayerArn = ssm.StringParameter.valueForStringParameter(this, "ProductsLayerVersionArn");
@@ -55,7 +58,7 @@ export class OrdersAppStack extends cdk.Stack {
         PRODUCTS_DDB: props.productsDbd.tableName,
         ORDERS_DDB: ordersDdb.tableName
       },
-      layers: [ordersLayer, productsLayer],
+      layers: [ordersLayer, productsLayer, ordersApiLayer],
       tracing: lambda.Tracing.ACTIVE,
       insightsVersion: lambda.LambdaInsightsVersion.VERSION_1_0_119_0
     })

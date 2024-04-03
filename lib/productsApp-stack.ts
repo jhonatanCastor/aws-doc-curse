@@ -32,13 +32,9 @@ export class ProductsAppStack extends cdk.Stack {
     const productsLayerArn = ssm.StringParameter.valueForStringParameter(this, "ProductsLayerVersionArn");
     const productsLayer = lambda.LayerVersion.fromLayerVersionArn(this, "ProductsLayerVersionArn", productsLayerArn);
 
-
-
      //Product Events
      const productEventsLayerArn = ssm.StringParameter.valueForStringParameter(this, "ProductEventsLayerVersionArn");
      const productEventsLayer = lambda.LayerVersion.fromLayerVersionArn(this, "ProductEventsLayerVersionArn", productEventsLayerArn);
-
-
 
     const productsEventsHandler = new lambdaNodeJs.NodejsFunction(this, 'ProductsEventFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -52,7 +48,7 @@ export class ProductsAppStack extends cdk.Stack {
         sourceMap: false
       },
       environment: {
-        EVENTS_DDB: "ProductsDdB"
+        EVENTS_DDB: props.eventsDdb.tableName
       },
       layers: [productEventsLayer],
       tracing: lambda.Tracing.ACTIVE,
@@ -75,7 +71,7 @@ export class ProductsAppStack extends cdk.Stack {
         sourceMap: false
       },
       environment: {
-        PRODUCT_DDB: "ProductsDdB"
+        PRODUCT_DDB: props.eventsDdb.tableName
       },
       layers: [productsLayer],
       tracing: lambda.Tracing.ACTIVE,
@@ -98,7 +94,7 @@ export class ProductsAppStack extends cdk.Stack {
         sourceMap: false
       },
       environment: {
-        PRODUCT_DDB: "ProductsDdB",
+        PRODUCT_DDB: props.eventsDdb.tableName,
         PRODUCT_EVENTS_FUNCTION_NAME: "ProductsEventFunction"
       },
       layers: [productsLayer, productEventsLayer],
